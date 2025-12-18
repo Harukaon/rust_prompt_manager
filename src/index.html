@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>提示词管理器</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="/main.js" defer></script>
+</head>
+
+<body>
+    <div id="app" class="app">
+        <!-- 左侧：文件树 -->
+        <aside class="sidebar collapsed" id="sidebar">
+            <div class="sidebar-header">
+                <div class="folder-select-container" id="select-folder" title="选择文件夹">
+                    <button class="btn-folder">📁</button>
+                    <span id="folder-name" class="folder-name">选择文件夹</span>
+                </div>
+                <button id="toggle-sidebar" class="btn-toggle" title="收起侧边栏">◀</button>
+            </div>
+            <div class="file-tree" id="file-tree"></div>
+            <div class="folder-list">
+                <!-- 文件夹列表将通过 JS 动态生成 -->
+            </div>
+            <div class="sidebar-footer">
+                <button id="sync-btn" class="sidebar-btn" title="远程同步">🔄 同步</button>
+                <button id="settings-btn" class="sidebar-btn" title="设置">⚙️ 设置</button>
+            </div>
+        </aside>
+
+        <!-- 右侧：内容区 -->
+        <main class="content">
+            <div class="content-header">
+                <button id="toggle-sidebar-collapsed" class="btn-toggle-collapsed" title="展开侧边栏">☰</button>
+                <input type="text" id="prompt-title" class="title-input" placeholder="标题" readonly />
+                <input type="text" id="prompt-mnemonic" class="mnemonic-input" placeholder="助记词"
+                    title="输入助记词（如 Rules）后按 Enter 保存" />
+                <div class="actions">
+                    <button id="new-btn" class="btn-action btn-primary" title="新建提示词">新建</button>
+                </div>
+            </div>
+            <textarea id="prompt-content" class="content-editor" placeholder="在左侧选择或点击「新建」创建提示词...&#10;&#10;Ctrl+S 保存" readonly></textarea>
+        </main>
+    </div>
+
+    <!-- 右键菜单 - 文件 -->
+    <div id="context-menu-file" class="context-menu hidden">
+        <div class="menu-item" id="menu-delete">删除</div>
+        <div class="menu-item" id="menu-open-folder">在文件资源管理器中打开</div>
+    </div>
+
+    <!-- 右键菜单 - 文件夹 -->
+    <div id="context-menu-folder" class="context-menu hidden">
+        <div class="menu-item" id="menu-new-file">新建文件</div>
+        <div class="menu-item" id="menu-new-folder">新建文件夹</div>
+        <div class="menu-item" id="menu-rename-folder">重命名</div>
+        <div class="menu-item" id="menu-delete-folder">删除文件夹</div>
+        <div class="menu-item" id="menu-open-folder-2">在文件资源管理器中打开</div>
+    </div>
+
+    <!-- 右键菜单 - 空白区域 -->
+    <div id="context-menu-blank" class="context-menu hidden">
+        <div class="menu-item" id="menu-new-file-blank">新建文件</div>
+        <div class="menu-item" id="menu-new-folder-blank">新建文件夹</div>
+    </div>
+
+    <!-- 设置模态框 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>设置</h2>
+            <div class="form-group">
+                <label for="hotkey-input">全局快捷键</label>
+                <input type="text" id="hotkey-input" placeholder="例如: Ctrl+Alt+K" readonly />
+                <small class="hotkey-hint">点击输入框后按下想要的快捷键组合</small>
+            </div>
+            <div class="form-group">
+                <label for="theme-select">主题</label>
+                <select id="theme-select" class="theme-select">
+                    <option value="dark">深色</option>
+                    <option value="light">浅色</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="autostart-checkbox" />
+                    <span>开机自动启动</span>
+                </label>
+            </div>
+
+            <!-- 远程同步设置 -->
+            <div class="form-group">
+                <label class="section-label">远程同步 (SSH)</label>
+                <div class="ssh-status" id="ssh-status">检测中...</div>
+            </div>
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="sync-enabled-checkbox" />
+                    <span>启用远程同步</span>
+                </label>
+            </div>
+            <div class="form-group sync-settings" id="sync-settings">
+                <label for="sync-server">服务器 (user@host)</label>
+                <input type="text" id="sync-server" placeholder="user@192.168.1.100" />
+            </div>
+            <div class="form-group sync-settings">
+                <label for="sync-remote-path">远程路径</label>
+                <input type="text" id="sync-remote-path" placeholder="~/prompts" />
+            </div>
+            <div class="form-group sync-settings">
+                <label for="sync-port">SSH 端口</label>
+                <input type="number" id="sync-port" placeholder="22" value="22" />
+            </div>
+            <div class="form-group sync-settings">
+                <button id="test-ssh-btn" class="btn-action btn-secondary">测试连接</button>
+                <span id="ssh-test-result" class="test-result"></span>
+            </div>
+
+            <div class="form-group">
+                <label>配置文件路径</label>
+                <div class="config-path" id="config-path" title="点击复制"></div>
+            </div>
+            <div class="modal-actions">
+                <button id="save-settings-btn" class="btn-action btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 同步模态框 -->
+    <div id="sync-modal" class="modal">
+        <div class="modal-content modal-small">
+            <span class="close-btn close-sync">&times;</span>
+            <h2>远程同步</h2>
+            <div class="sync-actions">
+                <button id="sync-pull-btn" class="btn-sync">
+                    <span class="sync-icon">⬇️</span>
+                    <span class="sync-label">拉取</span>
+                    <small>从服务器下载</small>
+                </button>
+                <button id="sync-push-btn" class="btn-sync">
+                    <span class="sync-icon">⬆️</span>
+                    <span class="sync-label">推送</span>
+                    <small>上传到服务器</small>
+                </button>
+            </div>
+            <div id="sync-progress" class="sync-progress hidden">
+                <div class="progress-text">同步中...</div>
+            </div>
+            <div id="sync-result" class="sync-result hidden"></div>
+        </div>
+    </div>
+</body>
+
+</html>

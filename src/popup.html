@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>快速插入</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 深色主题（默认） */
+        :root,
+        [data-theme="dark"] {
+            --popup-bg: #1a1a1a;
+            --popup-border: #333;
+            --popup-input-bg: #2a2a2a;
+            --popup-input-border: #444;
+            --popup-text: #fff;
+            --popup-text-secondary: #aaa;
+            --popup-text-muted: #666;
+            --popup-hover: #333;
+            --popup-scrollbar: #444;
+        }
+
+        /* 浅色主题 */
+        [data-theme="light"] {
+            --popup-bg: #ffffff;
+            --popup-border: #e0e0e0;
+            --popup-input-bg: #ffffff;
+            --popup-input-border: #ddd;
+            --popup-text: #333;
+            --popup-text-secondary: #666;
+            --popup-text-muted: #999;
+            --popup-hover: #f0f0f0;
+            --popup-scrollbar: rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+            background: var(--popup-bg);
+            border: 1px solid var(--popup-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .search-box {
+            padding: 8px;
+            border-bottom: 1px solid var(--popup-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--popup-input-border);
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            background: var(--popup-input-bg);
+            color: var(--popup-text);
+        }
+
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: var(--popup-text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .mode-toggle input {
+            cursor: pointer;
+        }
+
+        .search-input:focus {
+            border-color: var(--popup-text-muted);
+        }
+
+        .search-input::placeholder {
+            color: var(--popup-text-muted);
+        }
+
+        .list-container {
+            max-height: 340px;
+            overflow-y: auto;
+        }
+
+        .list-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--popup-border);
+        }
+
+        .list-item:hover,
+        .list-item.selected {
+            background: var(--popup-hover);
+        }
+
+        .list-item .mnemonic {
+            font-weight: 600;
+            color: var(--popup-text);
+            font-size: 13px;
+        }
+
+        .list-item .title {
+            color: var(--popup-text-secondary);
+            font-size: 13px;
+            margin-left: 8px;
+        }
+
+        .list-item .preview {
+            color: var(--popup-text-muted);
+            font-size: 12px;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .empty {
+            padding: 20px;
+            text-align: center;
+            color: var(--popup-text-muted);
+            font-size: 13px;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--popup-scrollbar);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--popup-scrollbar);
+        }
+
+        .footer-action {
+            padding: 8px;
+            border-top: 1px solid var(--popup-border);
+        }
+
+        .btn-paste {
+            width: 100%;
+            padding: 8px;
+            background: var(--popup-input-bg);
+            border: 1px solid var(--popup-input-border);
+            border-radius: 4px;
+            color: var(--popup-text-muted);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .btn-paste:hover {
+            background: var(--popup-hover);
+            color: var(--popup-text);
+        }
+    </style>
+    <script type="module" src="/popup.js" defer></script>
+</head>
+
+<body>
+    <div class="search-box">
+        <input type="text" class="search-input" id="search" placeholder="搜索..." autofocus />
+        <label class="mode-toggle">
+            <input type="checkbox" id="simulate-mode" />
+            <span>模拟</span>
+        </label>
+    </div>
+    <div class="list-container" id="list"></div>
+    <div class="footer-action">
+        <button id="paste-clipboard-btn" class="btn-paste">模拟输入剪切板内容</button>
+    </div>
+</body>
+
+</html>
